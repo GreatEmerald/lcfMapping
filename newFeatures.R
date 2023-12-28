@@ -1,21 +1,17 @@
-# MSc Thesis
-# 25/02/2021
+# Markov paper
 # Add new features
-
-# Set working directory (for yourself)
-setwd("~/Thesis/code/lcfMapping/")
 
 # Access libraries
 library(sf)
 library(pbapply)
-library(probaV)
 
 source("utils/loadData.R")
 source("utils/extractDates.R")
 source("utils/dataManagement.R")
+source("utils/harmonicsFunctions.R")
 
 # Link to data folder
-linkData <- "C:/Users/robur/Documents/Thesis/code/data/"
+linkData <- "data/"
 
 # Get column dates
 dates = extractDates()
@@ -26,10 +22,10 @@ NewColDates = paste0("X", gsub("-", ".", dates))
 
 ## IIASA.TRAIN
 # Read in b4 and b5 (for ndvi stats)
-linkIIASAtrain = "../data/processed/IIASAtrainingFiltered.gpkg"
+linkIIASAtrain = paste0(linkData, "/processed/IIASAtrainingFiltered.gpkg")
 nameBands <- st_layers(linkIIASAtrain)
-coords = read.csv("../data/processed/IIASAtrainingCoords.csv")
-ID = read.csv("../data/processed/IIASAtrainingLocationID.csv")
+coords = read.csv(paste0(linkData, "/processed/IIASAtrainingCoords.csv"))
+ID = read.csv(paste0(linkData, "/processed/IIASAtrainingLocationID.csv"))
 
 b4 <- st_read(linkIIASAtrain, nameBands$name[4])
 b5 <- st_read(linkIIASAtrain, nameBands$name[5])
@@ -66,7 +62,7 @@ VIs2015 = data.frame(ID, coords,
                      nbriqr, ndmiiqr, ndviiqr)
 # write median and iqr VIs
 VIs2015SF = DFtoSF(VIs2015)
-st_write(VIs2015SF, "../data/processed/IIASAtrainingVIs.gpkg")
+st_write(VIs2015SF, paste0(linkData, "/processed/IIASAtrainingVIs.gpkg"))
 
 
 # Split data into 2015, 2016, 2017 and 2018
@@ -110,7 +106,7 @@ VIs2015 = data.frame(ID,
                      nbr2015iqr, ndmi2015iqr, ndvi2015iqr)
 # write median and iqr VIs
 VIs2015SF = DFtoSF(VIs2015)
-st_write(VIs2015SF, "../data/processed/2015/IIASAtrainingVIs.gpkg")
+st_write(VIs2015SF, paste0(linkData, "/processed/2015/IIASAtrainingVIs.gpkg"))
 
 # 2016
 b42016 = b4[,colnames(b4)[grepl("2015|2016|2017", colnames(b4))]]
@@ -140,7 +136,7 @@ VIs2016 = data.frame(ID, coords,
 
 # write median and iqr VIs
 VIs2016SF = DFtoSF(VIs2016)
-st_write(VIs2016SF, "../data/processed/2016/IIASAtrainingVIs.gpkg")
+st_write(VIs2016SF, paste0(linkData, "/processed/2016/IIASAtrainingVIs.gpkg"))
 
 # 2017
 b42017 = b4[,colnames(b4)[grepl("2016|2017|2018", colnames(b4))]]
@@ -170,7 +166,7 @@ VIs2017 = data.frame(ID, coords,
 
 # write median and iqr VIs
 VIs2017SF = DFtoSF(VIs2017)
-st_write(VIs2017SF, "../data/processed/2017/IIASAtrainingVIs.gpkg")
+st_write(VIs2017SF, paste0(linkData, "/processed/2017/IIASAtrainingVIs.gpkg"))
 
 # 2018
 b42018 = b4[,colnames(b4)[grepl("2017|2018|2019", colnames(b4))]]
@@ -200,13 +196,13 @@ VIs2018 = data.frame(ID, coords,
 
 # write median and iqr VIs
 VIs2018SF = DFtoSF(VIs2018)
-st_write(VIs2018SF, "../data/processed/2018/IIASAtrainingVIs.gpkg")
+st_write(VIs2018SF, paste0(linkData, "/processed/2018/IIASAtrainingVIs.gpkg"))
  
 # done
 # todo now: implement new features in loadData and RF (features = loadNDVIcovars+new)
 # but first do the same for IIASAchange and WUR change
 
-linkIIASAchange = "../data/processed/IIASAchangeFiltered.gpkg"
+linkIIASAchange = paste0(linkData, "/processed/IIASAchangeFiltered.gpkg")
 nameBands <- st_layers(linkIIASAchange)
 
 b4 <- st_read(linkIIASAchange, nameBands$name[4])
@@ -254,7 +250,7 @@ VIs2015 = data.frame(coordsID,
                      nbr2015iqr, ndmi2015iqr, ndvi2015iqr)
 # write median and iqr VIs
 VIs2015SF = DFtoSF(VIs2015, validation = TRUE, coords = c("centroid_x","centroid_y"))
-st_write(VIs2015SF, "../data/processed/2015/IIASAchangeVIs.gpkg")
+st_write(VIs2015SF, paste0(linkData, "/processed/2015/IIASAchangeVIs.gpkg"))
 
 # 2016
 b42016 = b4[,colnames(b4)[grepl("2015|2016|2017", colnames(b4))]]
@@ -283,7 +279,7 @@ VIs2016 = data.frame(coordsID,
                      nbr2016iqr, ndmi2016iqr, ndvi2016iqr)
 # write median and iqr VIs
 VIs2016SF = DFtoSF(VIs2016, validation = TRUE, coords = c("centroid_x","centroid_y"))
-st_write(VIs2016SF, "../data/processed/2016/IIASAchangeVIs.gpkg")
+st_write(VIs2016SF, paste0(linkData, "/processed/2016/IIASAchangeVIs.gpkg"))
 
 # 2017
 b42017 = b4[,colnames(b4)[grepl("2016|2017|2018", colnames(b4))]]
@@ -312,7 +308,7 @@ VIs2017 = data.frame(coordsID,
                      nbr2017iqr, ndmi2017iqr, ndvi2017iqr)
 # write median and iqr VIs
 VIs2017SF = DFtoSF(VIs2017, validation = TRUE, coords = c("centroid_x","centroid_y"))
-st_write(VIs2017SF, "../data/processed/2017/IIASAchangeVIs.gpkg")
+st_write(VIs2017SF, paste0(linkData, "/processed/2017/IIASAchangeVIs.gpkg"))
 
 # 2018
 b42018 = b4[,colnames(b4)[grepl("2017|2018|2019", colnames(b4))]]
@@ -341,10 +337,10 @@ VIs2018 = data.frame(coordsID,
                      nbr2018iqr, ndmi2018iqr, ndvi2018iqr)
 # write median and iqr VIs
 VIs2018SF = DFtoSF(VIs2018, validation = TRUE, coords = c("centroid_x","centroid_y"))
-st_write(VIs2018SF, "../data/processed/2018/IIASAchangeVIs.gpkg")
+st_write(VIs2018SF, paste0(linkData, "/processed/2018/IIASAchangeVIs.gpkg"))
 
 ## WUR change
-linkWURchange = "../data/processed/WURchangeFiltered.gpkg"
+linkWURchange = paste0(linkData, "/processed/WURchangeFiltered.gpkg")
 nameBands <- st_layers(linkWURchange)
 
 b4 <- st_read(linkWURchange, nameBands$name[4])
@@ -392,7 +388,7 @@ VIs2015 = data.frame(coordsID,
                      nbr2015iqr, ndmi2015iqr, ndvi2015iqr)
 # write median and iqr VIs
 VIs2015SF = DFtoSF(VIs2015, validation = TRUE, coords = c("sample_x","sample_y"))
-st_write(VIs2015SF, "../data/processed/2015/WURchangeVIs.gpkg")
+st_write(VIs2015SF, paste0(linkData, "/processed/2015/WURchangeVIs.gpkg"))
 
 # 2016
 b42016 = b4[,colnames(b4)[grepl("2015|2016|2017", colnames(b4))]]
@@ -421,7 +417,7 @@ VIs2016 = data.frame(coordsID,
                      nbr2016iqr, ndmi2016iqr, ndvi2016iqr)
 # write median and iqr VIs
 VIs2016SF = DFtoSF(VIs2016, validation = TRUE, coords = c("sample_x","sample_y"))
-st_write(VIs2016SF, "../data/processed/2016/WURchangeVIs.gpkg")
+st_write(VIs2016SF, paste0(linkData, "/processed/2016/WURchangeVIs.gpkg"))
 
 # 2017
 b42017 = b4[,colnames(b4)[grepl("2016|2017|2018", colnames(b4))]]
@@ -450,7 +446,7 @@ VIs2017 = data.frame(coordsID,
                      nbr2017iqr, ndmi2017iqr, ndvi2017iqr)
 # write median and iqr VIs
 VIs2017SF = DFtoSF(VIs2017, validation = TRUE, coords = c("sample_x","sample_y"))
-st_write(VIs2017SF, "../data/processed/2017/WURchangeVIs.gpkg")
+st_write(VIs2017SF, paste0(linkData, "/processed/2017/WURchangeVIs.gpkg"))
 
 # 2018
 b42018 = b4[,colnames(b4)[grepl("2017|2018|2019", colnames(b4))]]
@@ -479,7 +475,7 @@ VIs2018 = data.frame(coordsID,
                      nbr2018iqr, ndmi2018iqr, ndvi2018iqr)
 # write median and iqr VIs
 VIs2018SF = DFtoSF(VIs2018, validation = TRUE, coords = c("sample_x","sample_y"))
-st_write(VIs2018SF, "../data/processed/2018/WURchangeVIs.gpkg")
+st_write(VIs2018SF, paste0(linkData, "/processed/2018/WURchangeVIs.gpkg"))
 
 # done, all new features created and stored
 # TODO: load new features in loadData anad for RF new features

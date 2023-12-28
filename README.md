@@ -26,4 +26,5 @@ The first three scripts process the IIASA (2015) Landsat-8 timeseries and create
 7. iiasaChange.R &emsp;(processes the IIASA (2015-2018) Landsat-8 timeseries and creates yearly datasets)
 8. newFeatures.R &emsp;(calculates new features for all 4 reference datasets)
 <br />
-After processing of the Landsat-8 timeseries, Random Forest regression can be performed in RFfunctionNew.R
+9. runRF.R &emsp;(random forest regression, basic and recurrent, run after processing of the Landsat-8 timeseries)
+10. markov/Markov-August.ipynb or markov/Markov-final.ipynb &emsp;(runs Markov chain postprocessing)

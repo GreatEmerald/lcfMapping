@@ -1,33 +1,27 @@
-# MSc Thesis
-# Start: 19/01/2021
-# Finalised: 31/05/2022
-
+# Markov paper
 # Load and process validation data
 
 # Access libraries and functions
 library(sf)
 library(pbapply)
-library(probaV)
 source("utils/extractDates.R")
 source("utils/filterBands.R")
 source("utils/dataManagement.R")
 source("utils/harmonicsFunctions.R")
 
-# Set working directory (for yourself)
-setwd("~/Thesis/code/lcfMapping/")
-
+linkData = "data/"
 # Get Dates
 dates = extractDates()
 NewColDates = paste0("X", gsub("-", ".", dates))
 ColDates = paste0(NewColDates, "_SR_B1")
 
 # Read in validation data (validY)
-filename = "../data/raw/refdata_world_africa_included_locations_data20190709.csv"
+filename = "data/raw/refdata_world_africa_included_locations_data20190709.csv"
 validationRaw = read.csv(filename, header = T)
 
 #Read in validation data (validX)
 # Read in features: NDVI harmonics (trainX)
-validationGPKG = st_read("../data/raw/WURValidation2015_Landsat8_TS.gpkg")
+validationGPKG = st_read("data/raw/WURValidation2015_Landsat8_TS.gpkg")
 st_geometry(validationGPKG)=NULL
 # now only reading in first band B1
 
@@ -35,8 +29,8 @@ st_geometry(validationGPKG)=NULL
 # so calculate ndvi harmonics for validation data
 
 # check if all points correspond
-all(validationRaw$sample_id %in% validationGPKG$ï..sample_id)
-all(validationGPKG$sample_id %in% validationRaw$ï..sample_id)
+all(validationRaw$sample_id %in% validationGPKG$sample_id)
+all(validationGPKG$sample_id %in% validationRaw$sample_id)
 
 # change to numeric
 sapply(validationGPKG, class)
@@ -46,7 +40,7 @@ sapply(validationGPKG, class)
 plot(as.numeric(apply(validationGPKG, 2, function(x){mean(x, na.rm = TRUE)})))
 
 # Read in b4 and b5 (for ndvi stats)
-linkRawValidation = "../data/raw/WURValidation2015_Landsat8_TS.gpkg"
+linkRawValidation = "data/raw/WURValidation2015_Landsat8_TS.gpkg"
 nameBands <- st_layers(linkRawValidation)
 
 b4Validation <- st_read(linkRawValidation, nameBands$name[4])
@@ -138,9 +132,9 @@ st_write(b7FilteredSF, paste0(linkData,"processed/WURvalidationFiltered.gpkg"), 
 
 ## Calc VI ##
 # Read in data (filtered bands)
-b4Filtered = st_read("../data/processed/WURvalidationFiltered.gpkg", "b4")
-b5Filtered = st_read("../data/processed/WURvalidationFiltered.gpkg", "b5")
-coordsID = read.csv("../data/processed/WURvalidationIDcoords.csv")
+b4Filtered = st_read("data/processed/WURvalidationFiltered.gpkg", "b4")
+b5Filtered = st_read("data/processed/WURvalidationFiltered.gpkg", "b5")
+coordsID = read.csv("data/processed/WURvalidationIDcoords.csv")
 st_geometry(b4Filtered)=NULL
 st_geometry(b5Filtered)=NULL
 
@@ -155,7 +149,7 @@ plot(as.numeric(apply(ndvi, 2, function(x){mean(x, na.rm = TRUE)})), ylab="mean 
 # Save ndvi as gpkg
 temp = cbind(coordsID,ndvi)
 ndviSF <- DFtoSF(temp, coords = c("subpix_mean_x","subpix_mean_y"), validation = TRUE) # first source
-st_write(ndviSF, "../data/processed/WURvalidationVIs.gpkg", "NDVI")
+st_write(ndviSF, "data/processed/WURvalidationVIs.gpkg", "NDVI")
 
 ## Get ndvi harmonics ##
 
@@ -170,6 +164,6 @@ names(HarmMetrics)[4:(length(HarmMetrics))]= c("min", "max", "intercept", "co",
 names(HarmMetrics)
 
 # Save harmonics 
-OuputHarmonicsLink = "../data/processed/WURvalidationHarmonics.gpkg"
+OuputHarmonicsLink = "data/processed/WURvalidationHarmonics.gpkg"
 HarmMetricsSF <- DFtoSF(HarmMetrics, coords = c("subpix_mean_x","subpix_mean_y"), validation = TRUE) # first source
 st_write(HarmMetricsSF, OuputHarmonicsLink, "NDVI")

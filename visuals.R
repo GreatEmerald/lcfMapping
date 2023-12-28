@@ -1,15 +1,73 @@
-# MSc Thesis
-# 15/03/2021
+# Markov paper
 # Explore outcomes
-
-# Set working directory
-setwd("~/Thesis/code/lcfMapping/")
 
 source("utils/loadData.R")
 source("RFfunctionNew.R")
 library(ggplot2)
-library(data.table)
+#library(data.table)
 
+## Utility functions; move to a util file?
+AccuracyStats = function(predicted, observed, relative=FALSE)
+{
+    RMSE = sqrt(mean(unlist(predicted - observed)^2, na.rm = TRUE))
+    MAE = mean(abs(unlist(predicted - observed)), na.rm = TRUE)
+    ME = mean(unlist(predicted - observed), na.rm = TRUE)
+    #RMSEAdj = sqrt(mean(unlist(predicted - observed - ME)^2))
+    Result = data.frame(RMSE, MAE, ME)#, RMSEAdj)
+    if (relative)
+        Result = Result/mean(unlist(observed))
+    return(Result)
+}
+
+AccuracyStatTable = function(predicted, observed, relative=FALSE)
+{
+    Result = AccuracyStats(predicted, observed, relative=relative)
+    row.names(Result) = "Overall"
+    for (i in 1:ncol(observed)){
+        RMSE = sqrt(mean(unlist(predicted[,i] - observed[,i])^2, na.rm = TRUE))
+        MAE = mean(abs(unlist(predicted[,i] - observed[,i])), na.rm = TRUE)
+        ME = mean(unlist(predicted[,i] - observed[,i]), na.rm = TRUE)
+        ColResult = data.frame(RMSE, MAE, ME)
+        if (relative)
+            ColResult = ColResult/mean(unlist(observed[,i]))
+        Result = rbind(Result, ColResult)
+        #Result = ColResult
+        #row.names(Result)[i+1] = names(observed[i])
+        row.names(Result)[i+1] = names(observed[i])
+    }
+    Result = Result[-1,]
+    return(Result)
+}
+
+
+prettyNames = function(uglyNames){
+    
+    NameMap = function(x){
+        
+        switch(x,
+               Overall= "Overall",
+               tree = "Trees",
+               shrub = "Shrubs",
+               grassland = "Grassland",
+               crops = "Crops",
+               urban_built_up = "Built-Up",
+               bare = "Bare",
+               water = "Water")
+    }
+    
+    if (is.list(uglyNames))
+    {
+        Result = lapply(uglyNames, sapply, NameMap)
+        names(Result) = sapply(names(Result), NameMap)
+    }
+    else
+        Result = sapply(uglyNames, NameMap)
+    
+    return(Result)
+}
+## End utility functions
+
+linkData = "data/"
 
 basic_rmse = data.frame(class=loadClassNames(), 
                         "2015"=c(22.9, 18.2, 36.2, 20.7, 10.9, 25.0, 18.3),
@@ -38,27 +96,31 @@ change2017 = subset(change2017, sample_id %in% temp$sample_id)
 change2018 = subset(change2018, sample_id %in% temp$sample_id)
 
 
-basic2015 = read.csv("../data/output/wurChange/predictions-2015-median.csv")
-basic2016 = read.csv("../data/output/wurChange/predictions-2016-median.csv")
-basic2017 = read.csv("../data/output/wurChange/predictions-2017-median.csv")
-basic2018 = read.csv("../data/output/wurChange/predictions-2018-median.csv")
+basic2015 = read.csv(paste0(linkData, "/output/wurChange/predictions-2015-median.csv"))
+basic2016 = read.csv(paste0(linkData, "/output/wurChange/predictions-2016-median.csv"))
+basic2017 = read.csv(paste0(linkData, "/output/wurChange/predictions-2017-median.csv"))
+basic2018 = read.csv(paste0(linkData, "/output/wurChange/predictions-2018-median.csv"))
 
-rec2015 = read.csv("../data/output/wurChange/predictions-2015-median-recurrent.csv")
-rec2016 = read.csv("../data/output/wurChange/predictions-2016-median-recurrent.csv")
-rec2017 = read.csv("../data/output/wurChange/predictions-2017-median-recurrent.csv")
-rec2018 = read.csv("../data/output/wurChange/predictions-2018-median-recurrent.csv")
+rec2015 = read.csv(paste0(linkData, "/output/wurChange/predictions-2015-median-recurrent.csv"))
+rec2016 = read.csv(paste0(linkData, "/output/wurChange/predictions-2016-median-recurrent.csv"))
+rec2017 = read.csv(paste0(linkData, "/output/wurChange/predictions-2017-median-recurrent.csv"))
+rec2018 = read.csv(paste0(linkData, "/output/wurChange/predictions-2018-median-recurrent.csv"))
 
-markov2015 = read.csv("../data/output/markov/smooth2015-basic.csv")
-markov2016 = read.csv("../data/output/markov/smooth2016-basic.csv")
-markov2017 = read.csv("../data/output/markov/smooth2017-basic.csv")
-markov2018 = read.csv("../data/output/markov/smooth2018-basic.csv")
+markov2015 = read.csv(paste0(linkData, "/output/markov/smooth2015-basic.csv"))
+markov2016 = read.csv(paste0(linkData, "/output/markov/smooth2016-basic.csv"))
+markov2017 = read.csv(paste0(linkData, "/output/markov/smooth2017-basic.csv"))
+markov2018 = read.csv(paste0(linkData, "/output/markov/smooth2018-basic.csv"))
 
 
-markov2015 = read.csv("../data/output/markov/smooth2015-coocc-new-001.csv")
-markov2016 = read.csv("../data/output/markov/smooth2016-coocc-new-001.csv")
-markov2017 = read.csv("../data/output/markov/smooth2017-coocc-new-001.csv")
-markov2018 = read.csv("../data/output/markov/smooth2018-coocc-new-001.csv")
+markov2015 = read.csv(paste0(linkData, "/output/markov/smooth2015-coocc-new-001.csv"))
+markov2016 = read.csv(paste0(linkData, "/output/markov/smooth2016-coocc-new-001.csv"))
+markov2017 = read.csv(paste0(linkData, "/output/markov/smooth2017-coocc-new-001.csv"))
+markov2018 = read.csv(paste0(linkData, "/output/markov/smooth2018-coocc-new-001.csv"))
 
+lm2015 = read.csv(paste0(linkData, "/output/linear/smooth2015.csv"))
+lm2016 = read.csv(paste0(linkData, "/output/linear/smooth2016.csv"))
+lm2017 = read.csv(paste0(linkData, "/output/linear/smooth2017.csv"))
+lm2018 = read.csv(paste0(linkData, "/output/linear/smooth2018.csv"))
 
 ggplotBar = function(ModelsToPlot, Truth, statistic="RMSE", ylab=NULL, digits=0, textsize=2.5, textvjust=-0.1, ylim=40, ...)
 {
@@ -160,7 +222,40 @@ gridExtra::grid.arrange(plot2015, plot2016, plot2017, plot2018, heights=c(30, 30
 dev.off()
 
 
+## Only LM vs RF
 
+plot2015 = ggplotBarNew(list("Basic RF"=basic2015,"Linear smoothing"=lm2015, "Recurrent RF"=rec2015),
+                        list(change2015[,loadClassNames()],
+                             change2015[,loadClassNames()],
+                             change2015[,loadClassNames()]),
+                        digits = 1, textsize = 2.25, textvjust=-0.5) + 
+                        theme(legend.position="none") + 
+    ylab("2015") + theme(axis.title.y = element_text(face="bold",angle=0,vjust=0.5,margin=margin(t=0,r=10,b=0,l=0)))
+
+plot2016 = ggplotBarNew(list("Basic RF"=basic2016,"Linear smoothing"=lm2016, "Recurrent RF"=rec2016),
+                        list(change2016[,loadClassNames()],
+                             change2016[,loadClassNames()],
+                             change2016[,loadClassNames()]),
+                        digits = 1, textsize = 2.25, textvjust=-0.5) + 
+    theme(legend.position="none") + ylab("2016") + theme(axis.title.y = element_text(face="bold",angle=0,vjust=0.5,margin=margin(t=0,r=10,b=0,l=0)))
+
+plot2017 = ggplotBarNew(list("Basic RF"=basic2017, "Linear smoothing"=lm2017, "Recurrent RF"=rec2017),
+                        list(change2017[,loadClassNames()],
+                             change2017[,loadClassNames()],
+                             change2017[,loadClassNames()]),
+                        digits = 1, textsize = 2.25, textvjust=-0.5) + 
+    theme(legend.position="none") + ylab("2017") + theme(axis.title.y = element_text(face="bold",angle=0,vjust=0.5,margin=margin(t=0,r=10,b=0,l=0)))
+
+plot2018 = ggplotBarNew(list("Basic RF"=basic2018, "Linear smoothing"=lm2018, "Recurrent RF"=rec2018),
+                        list(change2018[,loadClassNames()],
+                             change2018[,loadClassNames()],
+                             change2018[,loadClassNames()]),
+                        digits = 1, textsize = 2.25, textvjust=-0.5) + 
+    theme(legend.position="bottom") + ylab("2018") + theme(axis.title.y = element_text(face="bold",angle=0,vjust=0.5,margin=margin(t=0,r=10,b=0,l=0)))
+
+pdf("data/visualizations/barplots-perclass/rmse-models-bold.pdf", width=1272/175, height=(634*2.2)/175) #height 2.2 ipv 2
+gridExtra::grid.arrange(plot2015, plot2016, plot2017, plot2018, heights=c(30, 30, 30, 40))#nrow=3
+dev.off()
 
 ## old below
 # textsize was 1.9, now 2.4
@@ -269,63 +364,3 @@ ggplotBar = function(ModelsToPlot, Truth, statistic="RMSE", ylab=NULL, digits=0,
   
 }
 
-
-
-AccuracyStats = function(predicted, observed, relative=FALSE)
-{
-  RMSE = sqrt(mean(unlist(predicted - observed)^2))
-  MAE = mean(abs(unlist(predicted - observed)))
-  ME = mean(unlist(predicted - observed))
-  #RMSEAdj = sqrt(mean(unlist(predicted - observed - ME)^2))
-  Result = data.frame(RMSE, MAE, ME)#, RMSEAdj)
-  if (relative)
-    Result = Result/mean(unlist(observed))
-  return(Result)
-}
-
-AccuracyStatTable = function(predicted, observed, relative=FALSE)
-{
-  Result = AccuracyStats(predicted, observed, relative=relative)
-  row.names(Result) = "Overall"
-  for (i in 1:ncol(observed)){
-    RMSE = sqrt(mean(unlist(predicted[,i] - observed[,i])^2))
-    MAE = mean(abs(unlist(predicted[,i] - observed[,i])))
-    ME = mean(unlist(predicted[,i] - observed[,i]))
-    ColResult = data.frame(RMSE, MAE, ME)
-    if (relative)
-      ColResult = ColResult/mean(unlist(observed[,i]))
-    Result = rbind(Result, ColResult)
-    #Result = ColResult
-    #row.names(Result)[i+1] = names(observed[i])
-    row.names(Result)[i+1] = names(observed[i])
-  }
-  Result = Result[-1,]
-  return(Result)
-}
-
-
-prettyNames = function(uglyNames){
-  
-  NameMap = function(x){
-    
-    switch(x,
-           Overall= "Overall",
-           tree = "Trees",
-           shrub = "Shrubs",
-           grassland = "Grassland",
-           crops = "Crops",
-           urban_built_up = "Built-Up",
-           bare = "Bare",
-           water = "Water")
-  }
-  
-  if (is.list(uglyNames))
-  {
-    Result = lapply(uglyNames, sapply, NameMap)
-    names(Result) = sapply(names(Result), NameMap)
-  }
-  else
-    Result = sapply(uglyNames, NameMap)
-  
-  return(Result)
-}

@@ -1,11 +1,5 @@
-# MSc Thesis
-# Start: 15/12/2021
-# Modified: 28/03/2022
-# Finalised: 31/05/2022
+# Markov paper
 # Calculate vegetation indices
-
-# Set working directory (for yourself)
-setwd("~/Thesis/code/lcfMapping/")
 
 # Set libraries
 library(sf)
@@ -13,8 +7,8 @@ source("utils/dataManagement.R")
 source("utils/extractDates.R")
 
 # Link to data and utils
-InputLink = "../data/processed/IIASAtrainingFiltered.gpkg"
-OutputLink = "../data/processed/IIASAtrainingVIs.gpkg"
+InputLink = "data/processed/IIASAtrainingFiltered.gpkg"
+OutputLink = "data/processed/IIASAtrainingVIs.gpkg"
 
 # Get Dates
 dates = extractDates()
@@ -55,22 +49,25 @@ plot(as.numeric(ndvi[1,]))
 ndviSF <- DFtoSF(ndvi)
 st_write(ndviSF, OutputLink, "NDVI")
 
-# Read NDVI
-ndvi = st_read(OutputLink, "NDVI")
-st_geometry(ndvi) = NULL
-ndviComplete = ndvi
-ndvi = ndvi[,NewColDates]
-
-
-
-# Unused features below (not used further):
-# NDVI stats
-head(as.numeric(apply(ndvi, 1, mean, na.rm=T)), 5)
-ndvi[1,]
-mean(as.numeric(ndvi[3,]), na.rm=T)
-IQR(as.numeric(ndvi[3,]), na.rm=T)
-
-temp = as.numeric(apply(ndvi, 1, IQR, na.rm=T))
-iqr = data.frame(IQR=temp)
-temp = as.numeric(apply(ndvi, 1, median, na.rm=T))
-median = data.frame(medianNDVI=temp)
+if (FALSE)
+{
+    # Read NDVI
+    ndvi = st_read(OutputLink, "NDVI")
+    st_geometry(ndvi) = NULL
+    ndviComplete = ndvi
+    ndvi = ndvi[,NewColDates]
+    
+    
+    
+    # Unused features below (not used further):
+    # NDVI stats
+    head(as.numeric(apply(ndvi, 1, mean, na.rm=T)), 5)
+    ndvi[1,]
+    mean(as.numeric(ndvi[3,]), na.rm=T)
+    IQR(as.numeric(ndvi[3,]), na.rm=T)
+    
+    temp = as.numeric(apply(ndvi, 1, IQR, na.rm=T))
+    iqr = data.frame(IQR=temp)
+    temp = as.numeric(apply(ndvi, 1, median, na.rm=T))
+    median = data.frame(medianNDVI=temp)
+}

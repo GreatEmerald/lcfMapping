@@ -1,26 +1,16 @@
-# MSc Thesis
-# Start: 20/12/2021
-# Finalised: 31/05/2022
-
+# Markov paper
 # Get harmonic and temporal information
 
-# Access to probaV github library (uncomment lines below to get probaV package)
-#library(devtools)
-#options(unzip = "internal")
-#install_github("JornDallinga/probaV")
-
 # Import packages and functions
-library(probaV)
 library(sf)
+library(pbapply)
 source("utils/extractDates.R")
 source("utils/harmonicsFunctions.R")
-
-# Set working directory (for yourself)
-setwd("~/Thesis/code/lcfMapping/")
+source("utils/dataManagement.R")
 
 # Link to data
-InputLink = "../data/processed/IIASAtrainingVIs.gpkg"
-OuputHarmonicsLink = "../data/processed/IIASAtrainingHarmonics.gpkg"
+InputLink = "data/processed/IIASAtrainingVIs.gpkg"
+OuputHarmonicsLink = "data/processed/IIASAtrainingHarmonics.gpkg"
 
 # Get Dates
 dates = extractDates()
@@ -35,10 +25,10 @@ ndvi = ndvi[,NewColDates]
 # Apply GetHarmMetrics on NDVI timeseries
 
 # Run getHarmonics function and store hamonic metrics
-HarmMetrics = t(pbapply(as.matrix(ndvi), 1, getHarmonics))
+HarmMetrics = t(pbapply(as.matrix(ndvi), 1, getHarmonics, cl=parallel::detectCores()))
 
 # Convert HarmMetrics from matrix to df
-coordsData = read.csv("../data/processed/IIASAtrainingCoords.csv")
+coordsData = read.csv("data/processed/IIASAtrainingCoords.csv")
 ndvi = cbind(x=coordsData$x, y=coordsData$y, ndvi)
 HarmMetrics = cbind(ndvi[, c("x", "y")], HarmMetrics)
 

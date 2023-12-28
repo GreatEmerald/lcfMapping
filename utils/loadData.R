@@ -23,26 +23,26 @@ loadFeaturesNames <- function(){
   return(covars)
 }
 
-loadTrainingData <- function(){
+loadTrainingData <- function(linkData = "data/"){
   
   # TrainX
 
   # Read in training features from ndvi temporal harmonic features
   harmonics = st_read(paste0(linkData, "processed/IIASAtrainingHarmonics.gpkg"), "NDVI")
   st_geometry(harmonics)=NULL
-  locationID = read.csv("../data/processed/IIASAtrainingLocationID.csv")
+  locationID = read.csv(paste0(linkData, "processed/IIASAtrainingLocationID.csv"))
   harmonics = cbind(locationID,harmonics)
   rm(locationID)
   
   # Read in "new features" and combine
-  VIs = st_read("../data/processed/IIASAtrainingVIs.gpkg")
+  VIs = st_read(paste0(linkData, "/processed/2015/IIASAtrainingVIs.gpkg"))
   st_geometry(VIs)=NULL
-  features = merge(harmonics,VIs)
+  features = merge(harmonics,VIs, sort=FALSE)
   
   # TrainY
-  filename = "../data/raw/training_data_2015_100m_20190402_V4_New.csv" #use this csv!!!
+  filename = paste0(linkData, "/raw/training_data_2015_100m_20190402_V4_New.csv") #use this csv!!!
   samplePoints = read.csv2(filename, header = T, sep = ",", dec = ".") # creates num columns
-  samplePoints$ï..rowid = NULL #remove duplicate ID column
+  samplePoints$rowid = NULL #remove duplicate ID column
   rm(filename)
   
   
@@ -145,31 +145,31 @@ loadTrainingData <- function(){
 }
 
 
-loadChangeTrainingData <- function(year = FALSE){
+loadChangeTrainingData <- function(year = FALSE, linkData="data/"){
   
   # TrainY
-  filename = "../data/raw/Data_Global_quoted.csv"
+  filename = paste0(linkData, "/raw/Data_Global_quoted.csv")
   samplePoints = read.csv(filename) # creates num columns
   
   # TrainX
   if (year=="2015"){
-    harmonics = st_read("../data/processed/2015/IIASAchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2015/IIASAchangeVIs.gpkg")
+    harmonics = st_read(paste0(linkData, "/processed/2015/IIASAchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2015/IIASAchangeVIs.gpkg"))
     samplePoints = samplePoints[samplePoints$reference_year == "2015",]
   }
   else if (year=="2016"){
-    harmonics = st_read("../data/processed/2016/IIASAchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2016/IIASAchangeVIs.gpkg")
+    harmonics = st_read(paste0(linkData, "/processed/2016/IIASAchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2016/IIASAchangeVIs.gpkg"))
     samplePoints = samplePoints[samplePoints$reference_year == "2016",]
   }
   else if (year=="2017"){
-    harmonics = st_read("../data/processed/2017/IIASAchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2017/IIASAchangeVIs.gpkg")
+    harmonics = st_read(paste0(linkData, "/processed/2017/IIASAchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2017/IIASAchangeVIs.gpkg"))
     samplePoints = samplePoints[samplePoints$reference_year == "2017",]
   }
   else if (year=="2018"){
-    harmonics = st_read("../data/processed/2018/IIASAchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2018/IIASAchangeVIs.gpkg")
+    harmonics = st_read(paste0(linkData, "/processed/2018/IIASAchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2018/IIASAchangeVIs.gpkg"))
     samplePoints = samplePoints[samplePoints$reference_year == "2018",]
   }
   else {
@@ -294,39 +294,39 @@ loadChangeTrainingData <- function(year = FALSE){
 }
 
 
-loadChangeValidationData <- function(year=FALSE){
+loadChangeValidationData <- function(year=FALSE, linkData="data/"){
   
   # ValiY: read csv file
-  filename = "../data/raw/reference_global_100m_orig&change_year2015-2019_20210407.csv"
+  filename = paste0(linkData, "/raw/reference_global_100m_orig&change_year2015-2019_20210407.csv")
   validationRaw = read.csv(filename)
   rm(filename)
   names(validationRaw)[names(validationRaw) == "subpix_mean_x"] = "x"
   names(validationRaw)[names(validationRaw) == "subpix_mean_y"] = "y"
-  validationRaw$ï..=NULL
+#  validationRaw$?..=NULL
   
   # ValiX: read GPKG of features
   if (year=="2015"){
-    HarmMetrics = st_read("../data/processed/2015/WURchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2015/WURchangeVIs.gpkg")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2015/WURchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2015/WURchangeVIs.gpkg"))
     validationRaw = validationRaw[validationRaw$dataYear == "2015",]
   }
   else if (year=="2016"){
-    HarmMetrics = st_read("../data/processed/2016/WURchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2016/WURchangeVIs.gpkg")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2016/WURchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2016/WURchangeVIs.gpkg"))
     validationRaw = validationRaw[validationRaw$dataYear == "2016",]
   }
   else if (year=="2017"){
-    HarmMetrics = st_read("../data/processed/2017/WURchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2017/WURchangeVIs.gpkg")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2017/WURchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2017/WURchangeVIs.gpkg"))
     validationRaw = validationRaw[validationRaw$dataYear == "2017",]
   }
   else if (year=="2018"){
-    HarmMetrics = st_read("../data/processed/2018/WURchangeHarmonics.gpkg", "NDVI")
-    VIs = st_read("../data/processed/2018/WURchangeVIs.gpkg")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2018/WURchangeHarmonics.gpkg"), "NDVI")
+    VIs = st_read(paste0(linkData, "/processed/2018/WURchangeVIs.gpkg"))
     validationRaw = validationRaw[validationRaw$dataYear == "2018",]
   }
   else {
-    HarmMetrics = st_read(paste0("../data/processed/WURchangeHarmonics.gpkg"), "NDVI")
+    HarmMetrics = st_read(paste0(linkData, "/processed/WURchangeHarmonics.gpkg"), "NDVI")
   }
   
   #HarmMetrics = st_read(paste0(linkData, "processed/WURvalidationHarmonics.gpkg"), "NDVI")
@@ -451,7 +451,7 @@ loadChangeValidationData <- function(year=FALSE){
 #   # TrainY
 #   filename = "../data/raw/training_data_2015_100m_20190402_V4_New.csv" #use this csv!!!
 #   samplePoints = read.csv2(filename, header = T, sep = ",", dec = ".") # creates num columns
-#   samplePoints$ï..rowid = NULL #remove duplicate ID column
+#   samplePoints$?..rowid = NULL #remove duplicate ID column
 #   rm(filename)
 #   
 #   
@@ -694,7 +694,7 @@ loadChangeValidationData <- function(year=FALSE){
 #   rm(filename)
 #   names(validationRaw)[names(validationRaw) == "subpix_mean_x"] = "x"
 #   names(validationRaw)[names(validationRaw) == "subpix_mean_y"] = "y"
-#   validationRaw$ï..=NULL
+#   validationRaw$?..=NULL
 #   
 #   # ValiX: read GPKG of features
 #   if (year=="2015"){
@@ -794,28 +794,28 @@ loadChangeValidationData <- function(year=FALSE){
 # }
 
 
-loadValidationData <- function(year=FALSE){
+loadValidationData <- function(year=FALSE, linkData="data/"){
   
   # ValiY: read csv file
-  filename = "../data/raw/refdata_world_africa_included_locations_data20190709.csv"
+  filename = paste0(linkData, "/raw/refdata_world_africa_included_locations_data20190709.csv")
   validationRaw = read.csv(filename, header = T)
   rm(filename)
   names(validationRaw)[names(validationRaw) == "subpix_mean_x"] = "x"
   names(validationRaw)[names(validationRaw) == "subpix_mean_y"] = "y"
-  names(validationRaw)[names(validationRaw) == "ï..sample_id"] = "sample_id"
+  names(validationRaw)[names(validationRaw) == "?..sample_id"] = "sample_id"
   
   # ValiX: read GPKG of features
   if (year=="2015"){
-    HarmMetrics = st_read("../data/processed/2015/WURvalidationHarmonics.gpkg", "NDVI")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2015/WURvalidationHarmonics.gpkg"), "NDVI")
   }
   else if (year=="2016"){
-    HarmMetrics = st_read("../data/processed/2016/WURvalidationHarmonics.gpkg", "NDVI")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2016/WURvalidationHarmonics.gpkg"), "NDVI")
   }
   else if (year=="2017"){
-    HarmMetrics = st_read("../data/processed/2017/WURvalidationHarmonics.gpkg", "NDVI")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2017/WURvalidationHarmonics.gpkg"), "NDVI")
   }
   else if (year=="2018"){
-    HarmMetrics = st_read("../data/processed/2018/WURvalidationHarmonics.gpkg", "NDVI")
+    HarmMetrics = st_read(paste0(linkData, "/processed/2018/WURvalidationHarmonics.gpkg"), "NDVI")
   }
   else {
     HarmMetrics = st_read(paste0(linkData, "processed/WURvalidationHarmonics.gpkg"), "NDVI")

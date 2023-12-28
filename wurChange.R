@@ -1,30 +1,24 @@
-# MSc Thesis
-# Start: 09/02/2021
-# Finalised: 31/05/2022
-
+# Markov paper
 # Process WUR change data
-
-# Set working directory (for yourself)
-setwd("~/Thesis/code/lcfMapping/")
 
 # Access libraries
 library(sf)
 library(pbapply)
-library(probaV)
 library(ranger)
 
 source("utils/filterBands.R")
 source("utils/loadData.R")
 source("utils/extractDates.R")
 source("utils/dataManagement.R")
+source("utils/harmonicsFunctions.R")
 source("RFfunction.R")
 
 # Link to data folder (for yourself)
-linkData <- "C:/Users/robur/Documents/Thesis/code/data/"
+linkData <- "data/"
 
 
 # Link to landsat gpkg of wur change dataset 
-linkRawValidation = "../data/raw/WURChange20152019_Landsat8_TS.gpkg"
+linkRawValidation = paste0(linkData, "/raw/WURChange20152019_Landsat8_TS.gpkg")
 nameBands <- st_layers(linkRawValidation)
 
 # Read in b2 to filter
@@ -67,11 +61,21 @@ mean(is.na(b2Filtered))
 # Apply b2 filter to other bands
 b2Matrix = as.matrix(b2Filtered[,NewColDates])
 
-b7Filtered = b7
-temp = as.matrix(b7Filtered)[,NewColDates]
-temp[is.na(b2Matrix)] = NA
+ApplyFilter = function(b) 
+{
+    bFiltered = b
+    temp = as.matrix(bFiltered)[,NewColDates]
+    temp[is.na(b2Matrix)] = NA
+    bFiltered[,NewColDates] = temp
+    return(bFiltered)
+}
+b1Filtered = ApplyFilter(b1)
+b3Filtered = ApplyFilter(b3)
+b4Filtered = ApplyFilter(b4)
+b5Filtered = ApplyFilter(b5)
+b6Filtered = ApplyFilter(b6)
+b7Filtered = ApplyFilter(b7)
 
-b7Filtered[,NewColDates] = temp
 mean(is.na(b7[,NewColDates]))
 mean(is.na(b7Filtered[,NewColDates]))
 mean(is.na(b2Filtered))
@@ -111,7 +115,7 @@ temp = cbind("location_id" = b1Filtered$location_id,
              "sample_y" = b1Filtered$sample_y,
              ndvi)
 ndviSF <- DFtoSF(temp, coords = c("sample_x","sample_y"), validation = TRUE) # first source
-st_write(ndviSF, "../data/processed/WURchangeVIs.gpkg", "NDVI")
+st_write(ndviSF, paste0(linkData, "/processed/WURchangeVIs.gpkg"), "NDVI")
 
 
 ##
@@ -129,11 +133,11 @@ names(HarmMetrics)
 
 # Save harmonics 
 HarmMetricsSF <- DFtoSF(HarmMetrics, coords = c("sample_x","sample_y"), validation = TRUE)
-st_write(HarmMetricsSF, "../data/processed/WURchangeHarmonics.gpkg", "NDVI")
+st_write(HarmMetricsSF, paste0(linkData, "/processed/WURchangeHarmonics.gpkg"), "NDVI")
 
 
-HarmMetrics = st_read("../data/processed/WURchangeHarmonics.gpkg", "NDVI")
-wurChangeCSV = read.csv("../data/raw/reference_global_100m_orig&change_year2015-2019_20210407.csv")
+HarmMetrics = st_read(paste0(linkData, "/processed/WURchangeHarmonics.gpkg"), "NDVI")
+wurChangeCSV = read.csv(paste0(linkData, "/raw/reference_global_100m_orig&change_year2015-2019_20210407.csv"))
 sum(wurChangeCSV$location_id %in% HarmMetrics$location_id)
 sum(HarmMetrics$location_id %in% wurChangeCSV$location_id)
 change2015 = subset(wurChangeCSV, dataYear=="2015")
@@ -142,7 +146,7 @@ change2017 = subset(wurChangeCSV, dataYear=="2017")
 change2018= subset(wurChangeCSV, dataYear=="2018")
 
 dataVali = loadChangeValidationData()
-loadChangeValidationData()
+#loadChangeValidationData()
 
 
 ### 
@@ -167,7 +171,7 @@ rm(b5Temp)
 # calc temporal harmonics
 dates = extractDates()
 dates = dates[grepl("2014|2015|2016",dates)]
-HarmMetrics = t(pbapply(as.matrix(ndvi), 1, getHarmonics))
+HarmMetrics = t(pbapply(as.matrix(ndvi), 1, getHarmonics, cl=parallel::detectCores()))
 HarmMetrics = cbind(b4[, c("location_id","sample_x", "sample_y")], HarmMetrics)
 
 # change colnames
@@ -178,7 +182,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2015 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("sample_x","sample_y"), validation = TRUE)
-st_write(temp, "../data/processed/2015/WURchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2015/WURchangeHarmonics.gpkg"), "NDVI")
 
 # 2016 #
 # 69 observations / dates
@@ -206,7 +210,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2016 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("sample_x","sample_y"), validation = TRUE)
-st_write(temp, "../data/processed/2016/WURchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2016/WURchangeHarmonics.gpkg"), "NDVI")
 
 # 2017 #
 # 69 observations / dates
@@ -234,7 +238,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2017 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("sample_x","sample_y"), validation = TRUE)
-st_write(temp, "../data/processed/2017/WURchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2017/WURchangeHarmonics.gpkg"), "NDVI")
 
 # 2018 #
 # 68 observations / dates
@@ -262,67 +266,4 @@ names(HarmMetrics)
 
 # Save (ndvi) 2018 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("sample_x","sample_y"), validation = TRUE)
-st_write(temp, "../data/processed/2018/WURchangeHarmonics.gpkg", "NDVI")
-
-
-##
-# Try RF and validate on change data
-dataTrain = loadTrainingData()
-change2015 = loadChangeValidationData(year = "2015")
-change2016 = loadChangeValidationData(year = "2016")
-change2017 = loadChangeValidationData(year = "2017")
-change2018 = loadChangeValidationData(year = "2018")
-temp = subset(change2015, location_id %in% change2016$location_id)
-temp = subset(temp, location_id %in% change2017$location_id)
-temp = subset(temp, location_id %in% change2018$location_id)
-change2015 = subset(change2015, sample_id %in% temp$sample_id)
-change2016 = subset(change2016, sample_id %in% temp$sample_id)
-change2017 = subset(change2017, sample_id %in% temp$sample_id)
-change2018 = subset(change2018, sample_id %in% temp$sample_id)
-years = list("2015" = change2015,
-             "2016" = change2016,
-             "2017" = change2017,
-             "2018" = change2018)
-
-# Apply RF on wur's change dataset as validation
-listDFs = runRandomForest(train=dataTrain, years=years, PredictType="quantiles")
-pred2015 = listDFs[[1]]
-pred2016 = listDFs[[2]]
-pred2017 = listDFs[[3]]
-pred2018 = listDFs[[4]]
-
-write.csv(pred2015, "../data/output/wurChange/predictions-2015-ndvi-median.csv", row.names = F)
-write.csv(pred2016, "../data/output/wurChange/predictions-2016-ndvi-median.csv", row.names = F)
-write.csv(pred2017, "../data/output/wurChange/predictions-2017-ndvi-median.csv", row.names = F)
-write.csv(pred2018, "../data/output/wurChange/predictions-2018-ndvi-median.csv", row.names = F)
-
-stats2015 = getStats(basic2015, change2015)
-stats2016 = getStats(basic2016, change2016)
-stats2017 = getStats(basic2017, change2017)
-stats2018 = getStats(basic2018, change2018)
-
-rmse = data.frame(matrix(ncol=length(classes), nrow=4))
-colnames(rmse)=classes
-rownames(rmse)=c("2015","2016","2017","2018")
-rmse["2015",]=stats2015["RMSE",]
-rmse["2016",]=stats2016["RMSE",]
-rmse["2017",]=stats2017["RMSE",]
-rmse["2018",]=stats2018["RMSE",]
-rmse2015 = round(sqrt(mean(unlist(pred2015 - change2015[,classes])^2)), digits = 1)
-rmse2016 = round(sqrt(mean(unlist(pred2016 - change2016[,classes])^2)), digits = 1)
-rmse2017 = round(sqrt(mean(unlist(pred2017 - change2017[,classes])^2)), digits = 1)
-rmse2018 = round(sqrt(mean(unlist(pred2018 - change2018[,classes])^2)), digits = 1)
-rmse$overall = c(rmse2015, rmse2016, rmse2017, rmse2018)
-
-mae = data.frame(matrix(ncol=length(classes), nrow=4))
-colnames(mae)=classes
-rownames(mae)=c("2015","2016","2017","2018")
-mae["2015",]=stats2015["MAE",]
-mae["2016",]=stats2016["MAE",]
-mae["2017",]=stats2017["MAE",]
-mae["2018",]=stats2018["MAE",]
-mae2015 = round(mean(abs(unlist(pred2015  - change2015[,classes]))), digits = 1)
-mae2016 = round(mean(abs(unlist(pred2016  - change2016[,classes]))), digits = 1)
-mae2017 = round(mean(abs(unlist(pred2017  - change2017[,classes]))), digits = 1)
-mae2018 = round(mean(abs(unlist(pred2018  - change2018[,classes]))), digits = 1)
-mae$overall = c(mae2015, mae2016, mae2017, mae2018)
+st_write(temp, paste0(linkData, "/processed/2018/WURchangeHarmonics.gpkg"), "NDVI")

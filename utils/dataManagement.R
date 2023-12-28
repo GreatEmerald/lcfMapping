@@ -3,7 +3,7 @@
 # Handy data functions
 
 # Function to convert Dataframe to SF class
-DFtoSF <- function(DF, coords = c("x","y"), validation=FALSE){
+DFtoSF <- function(DF, coords = c("x","y"), validation=FALSE, linkData="data/"){
   
   # Add coordinates if necessary
   if (validation==FALSE){

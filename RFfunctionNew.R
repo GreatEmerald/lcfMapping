@@ -1,6 +1,6 @@
-# MSc Thesis
-# 28/01/2021
+# Markov paper
 # Random Forest function
+library(ranger)
 
 runRandomForest <- function(train=loadTrainingData(), years=loadValidationData(), 
                             features=loadFeaturesNames(), PredictType="response"){
@@ -61,7 +61,10 @@ runRandomForest <- function(train=loadTrainingData(), years=loadValidationData()
     temp = temp / rowSums(temp, na.rm=T) * 100
     temp = as.matrix(temp)
     temp[is.nan(temp)] = 0
-    assign(paste0("predictions", names(years)[i]), as.data.frame(temp))
+    temp = as.data.frame(temp)
+    # Fix names; not sure where we lost them
+    colnames(temp) = classes
+    assign(paste0("predictions", names(years)[i]), temp)
   }
   
   # Return all yearly predicted DF's 

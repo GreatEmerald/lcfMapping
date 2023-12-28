@@ -1,29 +1,25 @@
-# MSc Thesis
-# 20/02/2021
+# Markov paper
 # Process IIASA change data
-
-# Set working directory
-setwd("~/Thesis/code/lcfMapping/")
 
 # Access libraries
 library(sf)
 library(pbapply)
-library(probaV)
 library(ranger)
 
 source("utils/filterBands.R")
 source("utils/loadData.R")
 source("utils/extractDates.R")
 source("utils/dataManagement.R")
+source("utils/harmonicsFunctions.R")
 source("RFfunction.R")
 
 source("RFfunctionNew.R")
 
 # Link to data folder
-linkData <- "C:/Users/robur/Documents/Thesis/code/data/"
+linkData <- "data/"
 
 # Link to landsat gpkg of wur change dataset 
-linkRawData = "../data/raw/IIASAChange20152018_Landsat8_TS.gpkg"
+linkRawData = paste0(linkData, "/raw/IIASAChange20152018_Landsat8_TS.gpkg")
 nameBands <- st_layers(linkRawData)
 
 
@@ -67,11 +63,21 @@ mean(is.na(b2Filtered))
 # Apply b2 filter to other bands
 b2Matrix = as.matrix(b2Filtered[,NewColDates])
 
-b7Filtered = b7
-temp = as.matrix(b7Filtered)[,NewColDates]
-temp[is.na(b2Matrix)] = NA
+ApplyFilter = function(b) 
+{
+    bFiltered = b
+    temp = as.matrix(bFiltered)[,NewColDates]
+    temp[is.na(b2Matrix)] = NA
+    bFiltered[,NewColDates] = temp
+    return(bFiltered)
+}
+b1Filtered = ApplyFilter(b1)
+b3Filtered = ApplyFilter(b3)
+b4Filtered = ApplyFilter(b4)
+b5Filtered = ApplyFilter(b5)
+b6Filtered = ApplyFilter(b6)
+b7Filtered = ApplyFilter(b7)
 
-b7Filtered[,NewColDates] = temp
 mean(is.na(b7[,NewColDates]))
 mean(is.na(b7Filtered[,NewColDates]))
 mean(is.na(b2Filtered))
@@ -114,7 +120,7 @@ temp = cbind("sample_id" = b1Filtered$sample_id,
              "centroid_y" = b1Filtered$centroid_y,
              ndvi)
 ndviSF <- DFtoSF(temp, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(ndviSF, "../data/processed/IIASAchangeVIs.gpkg", "NDVI")
+st_write(ndviSF, paste0(linkData, "/processed/IIASAchangeVIs.gpkg"), "NDVI")
 
 
 ##
@@ -133,10 +139,10 @@ names(HarmMetrics)
 
 # Save harmonics 
 HarmMetricsSF <- DFtoSF(HarmMetrics, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(HarmMetricsSF, "../data/processed/IIASAchangeHarmonics.gpkg", "NDVI")
+st_write(HarmMetricsSF, paste0(linkData, "/processed/IIASAchangeHarmonics.gpkg"), "NDVI")
 
 
-iiasaChangeCSV = read.csv("../data/raw/Data_Global_quoted.csv")
+iiasaChangeCSV = read.csv(paste0(linkData, "/raw/Data_Global_quoted.csv"))
 sum(iiasaChangeCSV$sample_id %in% HarmMetrics$sample_id)
 sum(HarmMetrics$sample_id %in% iiasaChangeCSV$sample_id)
 
@@ -173,7 +179,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2015 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(temp, "../data/processed/2015/IIASAchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2015/IIASAchangeHarmonics.gpkg"), "NDVI")
 
 # 2016 #
 # 69 observations / dates
@@ -201,7 +207,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2016 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(temp, "../data/processed/2016/IIASAchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2016/IIASAchangeHarmonics.gpkg"), "NDVI")
 
 # 2017 #
 # 69 observations / dates
@@ -229,7 +235,7 @@ names(HarmMetrics)
 
 # Save (ndvi) 2017 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(temp, "../data/processed/2017/IIASAchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2017/IIASAchangeHarmonics.gpkg"), "NDVI")
 
 # 2018 #
 # 68 observations / dates
@@ -257,9 +263,10 @@ names(HarmMetrics)
 
 # Save (ndvi) 2018 features as GPKG
 temp = DFtoSF(HarmMetrics, coords = c("centroid_x","centroid_y"), validation = TRUE)
-st_write(temp, "../data/processed/2018/IIASAchangeHarmonics.gpkg", "NDVI")
+st_write(temp, paste0(linkData, "/processed/2018/IIASAchangeHarmonics.gpkg"), "NDVI")
 
 
+if (FALSE) {
 # Stored yearly features for iiasa change set
 # TODO: implement iiasa change in loadData functions -> done
 # Load all training and vali data
@@ -304,28 +311,28 @@ rec2016 = listDFs[[2]]
 rec2017 = listDFs[[3]]
 rec2018 = listDFs[[4]]
 
-write.csv(rec2015, "../data/output/wurChange/predictions-2015-median-recurrent.csv", row.names = F)
-write.csv(rec2016, "../data/output/wurChange/predictions-2016-median-recurrent.csv", row.names = F)
-write.csv(rec2017, "../data/output/wurChange/predictions-2017-median-recurrent.csv", row.names = F)
-write.csv(rec2018, "../data/output/wurChange/predictions-2018-median-recurrent.csv", row.names = F)
+write.csv(rec2015, paste0(linkData, "/output/wurChange/predictions-2015-median-recurrent.csv"), row.names = F)
+write.csv(rec2016, paste0(linkData, "/output/wurChange/predictions-2016-median-recurrent.csv"), row.names = F)
+write.csv(rec2017, paste0(linkData, "/output/wurChange/predictions-2017-median-recurrent.csv"), row.names = F)
+write.csv(rec2018, paste0(linkData, "/output/wurChange/predictions-2018-median-recurrent.csv"), row.names = F)
 
 # This recurrent model works and functions
 # TODO: move to RFfunction.R
 # TODO: check basic RF, rmse and mae, and save in paint, check with RMSEandMAE file
-basic2015 = read.csv("../data/output/wurChange/predictions-2015-median.csv")
-basic2016 = read.csv("../data/output/wurChange/predictions-2016-median.csv")
-basic2017 = read.csv("../data/output/wurChange/predictions-2017-median.csv")
-basic2018 = read.csv("../data/output/wurChange/predictions-2018-median.csv")
+basic2015 = read.csv(paste0(linkData, "/output/wurChange/predictions-2015-median.csv"))
+basic2016 = read.csv(paste0(linkData, "/output/wurChange/predictions-2016-median.csv"))
+basic2017 = read.csv(paste0(linkData, "/output/wurChange/predictions-2017-median.csv"))
+basic2018 = read.csv(paste0(linkData, "/output/wurChange/predictions-2018-median.csv"))
 
-markov2015 = read.csv("../data/output/markov/smooth2015-basic.csv")
-markov2016 = read.csv("../data/output/markov/smooth2016-basic.csv")
-markov2017 = read.csv("../data/output/markov/smooth2017-basic.csv")
-markov2018 = read.csv("../data/output/markov/smooth2018-basic.csv")
+markov2015 = read.csv(paste0(linkData, "/output/markov/smooth2015-basic.csv"))
+markov2016 = read.csv(paste0(linkData, "/output/markov/smooth2016-basic.csv"))
+markov2017 = read.csv(paste0(linkData, "/output/markov/smooth2017-basic.csv"))
+markov2018 = read.csv(paste0(linkData, "/output/markov/smooth2018-basic.csv"))
 
-rec2015 = read.csv("../data/output/wurChange/predictions-2015-median-recurrent.csv")
-rec2016 = read.csv("../data/output/wurChange/predictions-2016-median-recurrent.csv")
-rec2017 = read.csv("../data/output/wurChange/predictions-2017-median-recurrent.csv")
-rec2018 = read.csv("../data/output/wurChange/predictions-2018-median-recurrent.csv")
+rec2015 = read.csv(paste0(linkData, "/output/wurChange/predictions-2015-median-recurrent.csv"))
+rec2016 = read.csv(paste0(linkData, "/output/wurChange/predictions-2016-median-recurrent.csv"))
+rec2017 = read.csv(paste0(linkData, "/output/wurChange/predictions-2017-median-recurrent.csv"))
+rec2018 = read.csv(paste0(linkData, "/output/wurChange/predictions-2018-median-recurrent.csv"))
 
 basicRMSE2015 = round(sqrt(mean(unlist(basic2015 - change2015[,classes])^2)), digits = 1)
 basicRMSE2016 = round(sqrt(mean(unlist(basic2016 - change2016[,classes])^2)), digits = 1)
@@ -429,23 +436,23 @@ SCM(s_k/100, truth/100, plot = FALSE, totals = TRUE)
 
 # Overall Accuracy
 #       Basic       Recurrent
-# 2015  63.3%±1.1   63.3%±1.0
-# 2016  62.5%±1.1   74.8%±0.8
-# 2017  61.9%±1.1   74.1%±0.8
-# 2018  62.1%±1.1   73.9%±0.8
+# 2015  63.3%?1.1   63.3%?1.0
+# 2016  62.5%?1.1   74.8%?0.8
+# 2017  61.9%?1.1   74.1%?0.8
+# 2018  62.1%?1.1   73.9%?0.8
 
 # Kappa
 #       Basic       Recurrent
-# 2015  0.52±0.02   0.52±0.02
-# 2016  0.51±0.02   0.67±0.01
-# 2017  0.50±0.02   0.67±0.01
-# 2018  0.51±0.02   0.66±0.01
+# 2015  0.52?0.02   0.52?0.02
+# 2016  0.51?0.02   0.67?0.01
+# 2017  0.50?0.02   0.67?0.01
+# 2018  0.51?0.02   0.66?0.01
 
 # maybe nice to check OA and Kappa for wur2015 as validation set
-orig2015 = read.csv("../data/output/predictions-2015-ndvi-median.csv")
-orig2016 = read.csv("../data/output/predictions-2016-ndvi-median.csv")
-orig2017 = read.csv("../data/output/predictions-2017-ndvi-median.csv")
-orig2018 = read.csv("../data/output/predictions-2018-ndvi-median.csv")
+orig2015 = read.csv(paste0(linkData, "/output/predictions-2015-ndvi-median.csv"))
+orig2016 = read.csv(paste0(linkData, "/output/predictions-2016-ndvi-median.csv"))
+orig2017 = read.csv(paste0(linkData, "/output/predictions-2017-ndvi-median.csv"))
+orig2018 = read.csv(paste0(linkData, "/output/predictions-2018-ndvi-median.csv"))
 origRef2015 = loadValidationData("2015")
 origRef2016 = loadValidationData("2016")
 origRef2017 = loadValidationData("2017")
@@ -634,4 +641,6 @@ runRecurrentRF <- function(train=loadTrainingData(), change=NULL,
   
   # Return all yearly predicted DF's 
   return(list(rec2015, rec2016, rec2017, rec2018))
+}
+
 }
